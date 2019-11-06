@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import render_template, make_response, send_from_directory, send_file
 from flask import request, redirect, url_for
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 
 from config import config as cfg
 from utils import *
