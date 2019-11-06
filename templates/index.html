@@ -22,7 +22,6 @@
     }
 
     .GlobalButton {
-        border: solid 1px #7FFFD4;
         border-color: aquamarine;
         border-radius: 5px;
         width: 80%;
@@ -40,16 +39,7 @@
     }
 
     #whole_bg {
-        background: url({{ config['background-image-path'] }});
-        background-repeat: no-repeat;
-        background-position: center;
-    }
-
-    .transparent_box {
-        filter: alpha(Opacity=220);
-        -moz-opacity: 0.6;
-        opacity: 0.6
-        background-color: black;
+        background: url({{ config[ 'background-image-path' ] }})
     }
 
     #side_box {

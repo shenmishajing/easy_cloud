@@ -23,7 +23,7 @@ def HTML_verify():
             if request.remote_addr in iplist:
                 return redirect(url_for('HTML_entry'))
             else:
-                return render_template("verify.html")
+                return render_template("verify.html", config = cfg)
         elif request.method == 'POST':
             _password = request.form["password"]
             if verify(_password):
