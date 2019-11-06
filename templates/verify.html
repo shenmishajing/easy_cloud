@@ -57,9 +57,11 @@
 
 <script>
     function verify() {
+        _user = document.getElementById("user").value
         _pwd = document.getElementById("password").value
-        if (_pwd != "") {
+        if (_user != "" && _pwd != "") {
             var fd = new FormData()
+            fd.append("user", _user)
             fd.append("password", _pwd)
             var xhr = new XMLHttpRequest()
             xhr.addEventListener("load", operationComplete, false)
@@ -88,9 +90,14 @@
 <div>
     <div class="CenterBox" style="margin:0 auto;text-align: center;">
         <div style="width: 100%;height: 20%;margin-top: 10%">
-            <h3 style="margin-top: 60%;" class="common_text">输入密码<input class="MyInput" id="password"
-                                                                        style="margin-left: 40px;" type="password"
-                                                                        value=""/>
+            <h3 style="margin-top: 60%;" class="common_text">用户名<input class="MyInput" id="user"
+                                                                       style="margin-left: 40px;" type="text"
+                                                                       value=""/>
+            </h3>
+        </div>
+        <div style="width: 100%;height: 20%;margin-top: 10%">
+            <h3 class="common_text">密 码<input class="MyInput" id="password" style="margin-left: 50px;" type="password"
+                                              value=""/>
             </h3>
         </div>
         <div style="height: 30%;margin-top: 10%;">

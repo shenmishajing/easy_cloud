@@ -2,114 +2,118 @@ from flask import Flask
 from flask import render_template, make_response, send_from_directory, send_file
 from flask import request, redirect, url_for
 from werkzeug.utils import secure_filename
+from datetime import datetime, timedelta
 
 from config import config as cfg
 from utils import *
 from verify import verify
 
 from urllib import parse
+import json
 
 app = Flask(__name__)
 
-iplist = []
+passwds = json.load(open('config/user.db', 'r'))
 
 
-@app.route("/", methods = ['GET', 'POST'])
+@app.route('/', methods = ['GET', 'POST'])
 def HTML_verify():
     ''' verify target user'''
 
     try:
         if request.method == 'GET':
-            if request.remote_addr in iplist:
+            if request.cookies.get('user', None) in passwds:
                 return redirect(url_for('HTML_entry'))
             else:
-                return render_template("verify.html", config = cfg)
+                return render_template('verify.html', config = cfg)
         elif request.method == 'POST':
-            _password = request.form["password"]
-            if verify(_password):
-                iplist.append(request.remote_addr)
-                return "success"
+            _user = request.form['user']
+            _password = request.form['password']
+            if verify(_user, _password):
+                response = make_response('success')
+                response.set_cookie('user', _user, expires = datetime.today() + timedelta(7))
+                return response
             else:
-                return "failed"
+                return 'failed'
     except Exception as e:
         print(e)
-        return "404"
+        return '404'
 
 
-@app.route("/entry")
+@app.route('/entry')
 def HTML_entry():
-    if request.remote_addr in iplist:
-        return render_template("index.html", config = cfg)
+    if request.cookies.get('user', None) in passwds:
+        return render_template('index.html', config = cfg)
     else:
         return redirect(url_for('HTML_verify'))
 
 
-@app.route("/hello")
+@app.route('/hello')
 def HTML_hello():
-    if request.remote_addr in iplist:
-        return render_template("hello.html", config = cfg)
-    return redirect(url_for("HTML_verify"))
+    if request.cookies.get('user', None) in passwds:
+        return render_template('hello.html', config = cfg)
+    return redirect(url_for('HTML_verify'))
 
 
-@app.route("/filelist/<path:pathname>")
+@app.route('/filelist/<path:pathname>')
 def HTML_files(pathname):
-    if request.remote_addr in iplist:
-        _pathname = pathname + "/"
+    if request.cookies.get('user', None) in passwds:
+        _pathname = pathname + '/'
         files = scan_floder_first(_pathname)
-        return render_template("filelist.html", config = cfg, files = files, current_path = pathname)
+        return render_template('filelist.html', config = cfg, files = files, current_path = pathname)
     else:
-        return redirect(url_for("HTML_verify"))
+        return redirect(url_for('HTML_verify'))
 
 
 @app.route('/download/<path:path_name>')
 def download(path_name):
-    if request.remote_addr in iplist:
+    if request.cookies.get('user', None) in passwds:
         directory = os.path.dirname(path_name)
-        filename = path_name.split("/")[-1]
+        filename = path_name.split('/')[-1]
         print(directory, filename)
         res = make_response(send_from_directory(directory, filename, as_attachment = True))
         return res
     else:
-        return redirect(url_for("HTML_verify"))
+        return redirect(url_for('HTML_verify'))
 
 
-@app.route("/downloadex/<path:path_name>")
+@app.route('/downloadex/<path:path_name>')
 def downloadex(path_name):
     response = make_response(send_file(path_name))
     basename = os.path.basename(path_name)
-    response.headers["Content-Disposition"] = \
-        "attachment;" \
-        "filename*=UTF-8''{utf_filename}".format(
+    response.headers['Content-Disposition'] = \
+        'attachment;' \
+        'filename*=UTF-8''{utf_filename}'.format(
             utf_filename = parse.quote(basename.encode('utf-8'))
         )
     return response
 
 
-@app.route("/upload/<path:path_name>", methods = ['POST'])
+@app.route('/upload/<path:path_name>', methods = ['POST'])
 def upload_file(path_name):
     '''upload a new file in current floder'''
 
-    if request.remote_addr in iplist:
+    if request.cookies.get('user', None) in passwds:
         if request.method == 'POST':
             file = request.files['file']
             if file:
                 filename = secure_filename(file.filename)
                 if os.path.exists(path_name):
-                    return "upload failed"
+                    return 'upload failed'
                 else:
                     file.save(path_name)
-                    return "upload success"
+                    return 'upload success'
     else:
-        return redirect(url_for("HTML_verify"))
+        return redirect(url_for('HTML_verify'))
 
 
-@app.route("/remove", methods = ['POST'])
+@app.route('/remove', methods = ['POST'])
 def remove_files():
     '''remove target file in current floder'''
 
-    if request.remote_addr in iplist:
+    if request.cookies.get('user', None) in passwds:
         if request.method == 'POST':
-            files = eval(request.form.get("files_json_value"))
+            files = eval(request.form.get('files_json_value'))
             try:
                 for file in files:
                     if os.path.isfile(file):
@@ -117,35 +121,35 @@ def remove_files():
                     else:
                         delete_folder(file)
 
-                if not os.path.exists("./Files"):
-                    os.mkdir("./Files")
-                return "delete success"
+                if not os.path.exists('./Files'):
+                    os.mkdir('./Files')
+                return 'delete success'
             except FileNotFoundError as e:
                 print(e)
-                return "delete failed"
+                return 'delete failed'
     else:
-        return redirect(url_for("HTML_verify"))
+        return redirect(url_for('HTML_verify'))
 
 
-@app.route("/folder/<path:path_name>", methods = ['POST'])
+@app.route('/folder/<path:path_name>', methods = ['POST'])
 def create_folder(path_name):
     ''' create a new folder in current folder'''
 
-    if request.remote_addr in iplist:
+    if request.cookies.get('user', None) in passwds:
         if request.method == 'POST':
-            _folder_name = request.form.get("folder_name")
+            _folder_name = request.form.get('folder_name')
             if _folder_name:
                 os.mkdir(os.path.join(path_name, _folder_name))
-                return "create success"
+                return 'create success'
     else:
-        return redirect(url_for("HTML_verify"))
+        return redirect(url_for('HTML_verify'))
 
 
 _timer = Timer(72 * 3600)
 
 
 def _clear(_timer, iplist):
-    print("ip刷新器开启")
+    print('ip刷新器开启')
     while 1:
         if _timer.tick():
             iplist.clear()
