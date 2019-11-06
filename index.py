@@ -1,14 +1,12 @@
 from flask import Flask
 from flask import render_template, make_response, send_from_directory, send_file
-from flask import request, session, redirect, url_for
+from flask import request, redirect, url_for
 from werkzeug import secure_filename
 
 from config import config as cfg
 from utils import *
 from verify import verify
 
-from threading import Thread
-from gevent import pywsgi
 from urllib import parse
 
 app = Flask(__name__)
@@ -153,15 +151,7 @@ def _clear(_timer, iplist):
             iplist.clear()
 
 
-# t = Thread(target=_clear,args=(_timer,iplist))
-# t.start()
-
 if __name__ == '__main__':
     app.run('127.0.0.1', threaded = True, debug = False, port = 8080, ssl_context = (
         os.path.expanduser('~/ssl-certificate/2882671_www.shenmishajing.tk.pem'),
         os.path.expanduser('~/ssl-certificate/2882671_www.shenmishajing.tk.key')))
-    # t.start()
-    # b1c31ffb4e441292630a7b6b815589cb
-
-    # gserver = pywsgi.WSGIServer(('0.0.0.0',45534),app)
-    # gserver.serve_forever()
