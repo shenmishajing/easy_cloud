@@ -1,0 +1,167 @@
+from flask import Flask
+from flask import render_template, make_response, send_from_directory, send_file
+from flask import request, session, redirect, url_for
+from werkzeug import secure_filename
+
+from config import config as cfg
+from utils import *
+from verify import verify
+
+from threading import Thread
+from gevent import pywsgi
+from urllib import parse
+
+app = Flask(__name__)
+
+iplist = []
+
+
+@app.route("/", methods = ['GET', 'POST'])
+def HTML_verify():
+    ''' verify target user'''
+
+    try:
+        if request.method == 'GET':
+            if request.remote_addr in iplist:
+                return redirect(url_for('HTML_entry'))
+            else:
+                return render_template("verify.html")
+        elif request.method == 'POST':
+            _password = request.form["password"]
+            if verify(_password):
+                iplist.append(request.remote_addr)
+                return "success"
+            else:
+                return "failed"
+    except Exception as e:
+        print(e)
+        return "404"
+
+
+@app.route("/entry")
+def HTML_entry():
+    if request.remote_addr in iplist:
+        return render_template("index.html", config = cfg)
+    else:
+        return redirect(url_for('HTML_verify'))
+
+
+@app.route("/hello")
+def HTML_hello():
+    if request.remote_addr in iplist:
+        return render_template("hello.html", config = cfg)
+    return redirect(url_for("HTML_verify"))
+
+
+@app.route("/filelist/<path:pathname>")
+def HTML_files(pathname):
+    if request.remote_addr in iplist:
+        _pathname = pathname + "/"
+        files = scan_floder_first(_pathname)
+        return render_template("filelist.html", config = cfg, files = files, current_path = pathname)
+    else:
+        return redirect(url_for("HTML_verify"))
+
+
+@app.route('/download/<path:path_name>')
+def download(path_name):
+    if request.remote_addr in iplist:
+        directory = os.path.dirname(path_name)
+        filename = path_name.split("/")[-1]
+        print(directory, filename)
+        res = make_response(send_from_directory(directory, filename, as_attachment = True))
+        return res
+    else:
+        return redirect(url_for("HTML_verify"))
+
+
+@app.route("/downloadex/<path:path_name>")
+def downloadex(path_name):
+    response = make_response(send_file(path_name))
+    basename = os.path.basename(path_name)
+    response.headers["Content-Disposition"] = \
+        "attachment;" \
+        "filename*=UTF-8''{utf_filename}".format(
+            utf_filename = parse.quote(basename.encode('utf-8'))
+        )
+    return response
+
+
+@app.route("/upload/<path:path_name>", methods = ['POST'])
+def upload_file(path_name):
+    '''upload a new file in current floder'''
+
+    if request.remote_addr in iplist:
+        if request.method == 'POST':
+            file = request.files['file']
+            if file:
+                filename = secure_filename(file.filename)
+                if os.path.exists(path_name):
+                    return "upload failed"
+                else:
+                    file.save(path_name)
+                    return "upload success"
+    else:
+        return redirect(url_for("HTML_verify"))
+
+
+@app.route("/remove", methods = ['POST'])
+def remove_files():
+    '''remove target file in current floder'''
+
+    if request.remote_addr in iplist:
+        if request.method == 'POST':
+            files = eval(request.form.get("files_json_value"))
+            try:
+                for file in files:
+                    if os.path.isfile(file):
+                        os.remove(file)
+                    else:
+                        delete_folder(file)
+
+                if not os.path.exists("./Files"):
+                    os.mkdir("./Files")
+                return "delete success"
+            except FileNotFoundError as e:
+                print(e)
+                return "delete failed"
+    else:
+        return redirect(url_for("HTML_verify"))
+
+
+@app.route("/folder/<path:path_name>", methods = ['POST'])
+def create_folder(path_name):
+    ''' create a new folder in current folder'''
+
+    if request.remote_addr in iplist:
+        if request.method == 'POST':
+            _folder_name = request.form.get("folder_name")
+            if _folder_name:
+                os.mkdir(os.path.join(path_name, _folder_name))
+                return "create success"
+    else:
+        return redirect(url_for("HTML_verify"))
+
+
+_timer = Timer(72 * 3600)
+
+
+def _clear(_timer, iplist):
+    print("ip刷新器开启")
+    while 1:
+        if _timer.tick():
+            iplist.clear()
+
+
+# t = Thread(target=_clear,args=(_timer,iplist))
+# t.start()
+
+if __name__ == '__main__':
+    app.run('127.0.0.1', threaded = True, debug = False, port = 8080, ssl_context = (
+        os.path.expanduser('~/ssl-certificate/2882671_www.shenmishajing.tk.pem'),
+        os.path.expanduser('~/ssl-certificate/2882671_www.shenmishajing.tk.key')))
+    # t.start()
+    # b1c31ffb4e441292630a7b6b815589cb
+
+    # gserver = pywsgi.WSGIServer(('0.0.0.0',45534),app)
+    # gserver.serve_forever()
