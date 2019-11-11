@@ -2,11 +2,10 @@ from flask import Flask
 from flask import render_template, make_response, send_from_directory, send_file
 from flask import request, redirect, url_for
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
 
 from config import config as cfg
 from utils import *
-from verify import verify
+from verify import verify, login, verify_already_login
 
 from urllib import parse
 import json
@@ -22,7 +21,7 @@ def HTML_verify():
 
     try:
         if request.method == 'GET':
-            if request.cookies.get('user', None) in passwds:
+            if verify_already_login(request.cookies):
                 return redirect(url_for('HTML_entry'))
             else:
                 return render_template('verify.html', config = cfg)
@@ -31,7 +30,7 @@ def HTML_verify():
             _password = request.form['password']
             if verify(_user, _password):
                 response = make_response('success')
-                response.set_cookie('user', _user, expires = datetime.today() + timedelta(7))
+                login(response, _user)
                 return response
             else:
                 return 'failed'
@@ -42,7 +41,7 @@ def HTML_verify():
 
 @app.route('/entry')
 def HTML_entry():
-    if request.cookies.get('user', None) in passwds:
+    if verify_already_login(request.cookies):
         return render_template('index.html', config = cfg)
     else:
         return redirect(url_for('HTML_verify'))
@@ -50,14 +49,14 @@ def HTML_entry():
 
 @app.route('/hello')
 def HTML_hello():
-    if request.cookies.get('user', None) in passwds:
+    if verify_already_login(request.cookies):
         return render_template('hello.html', config = cfg)
     return redirect(url_for('HTML_verify'))
 
 
 @app.route('/filelist/<path:pathname>')
 def HTML_files(pathname):
-    if request.cookies.get('user', None) in passwds:
+    if verify_already_login(request.cookies):
         _pathname = pathname + '/'
         files = scan_floder_first(_pathname)
         return render_template('filelist.html', config = cfg, files = files, current_path = pathname)
@@ -67,7 +66,7 @@ def HTML_files(pathname):
 
 @app.route('/download/<path:path_name>')
 def download(path_name):
-    if request.cookies.get('user', None) in passwds:
+    if verify_already_login(request.cookies):
         directory = os.path.dirname(path_name)
         filename = path_name.split('/')[-1]
         print(directory, filename)
@@ -93,7 +92,7 @@ def downloadex(path_name):
 def upload_file(path_name):
     '''upload a new file in current floder'''
 
-    if request.cookies.get('user', None) in passwds:
+    if verify_already_login(request.cookies):
         if request.method == 'POST':
             file = request.files['file']
             if file:
@@ -111,7 +110,7 @@ def upload_file(path_name):
 def remove_files():
     '''remove target file in current floder'''
 
-    if request.cookies.get('user', None) in passwds:
+    if verify_already_login(request.cookies):
         if request.method == 'POST':
             files = eval(request.form.get('files_json_value'))
             try:
@@ -135,7 +134,7 @@ def remove_files():
 def create_folder(path_name):
     ''' create a new folder in current folder'''
 
-    if request.cookies.get('user', None) in passwds:
+    if verify_already_login(request.cookies):
         if request.method == 'POST':
             _folder_name = request.form.get('folder_name')
             if _folder_name:
