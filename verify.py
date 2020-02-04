@@ -4,11 +4,13 @@ import string
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
+import config
+
 login_user = {}
 
 
 def verify(user, pwd):
-    passwds = json.load(open('config/user.db', 'r'))
+    passwds = json.load(open(config.passwd_path, 'r'))
     if user in passwds and check_password_hash(passwds[user], pwd):
         return True
     return False

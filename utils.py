@@ -1,5 +1,6 @@
 import os
 import time
+import config
 from urllib import parse
 
 DIR = 0
@@ -155,7 +156,10 @@ def scan_floder_first(floder):
             _filelink = _filepath
             _Ret.append(fileobj(_filename, _filetype, _filesize, _filepath, _filelink))
         else:
-            _Ret.append(folderobj(_sub, _tmp))
+            if _tmp.startswith(config.project_path):
+                _Ret.append(folderobj(_sub, _tmp[len(config.project_path):]))
+            else:
+                _Ret.append(folderobj(_sub, _tmp))
     return _Ret
 
 
