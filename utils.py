@@ -146,21 +146,23 @@ def scan_floder_first(floder):
     '''遍历一个文件夹下第一层目录的子文件和子目录'''
 
     _Ret = []
-    for _sub in os.listdir(floder):
+    _Ret_file = []
+    _Ret_floder = []
+    for _sub in sorted(os.listdir(floder)):
         _tmp = floder + _sub
+        if _tmp.startswith(config.project_path):
+            _filepath = _tmp[len(config.project_path):]
+        else:
+            _filepath = _tmp
         if os.path.isfile(_tmp):
             _filetype = filetype(_tmp)
             _filesize = file_size(_tmp)
-            _filepath = _tmp
             _filename = _sub
             _filelink = _filepath
-            _Ret.append(fileobj(_filename, _filetype, _filesize, _filepath, _filelink))
+            _Ret_file.append(fileobj(_filename, _filetype, _filesize, _filepath, _filelink))
         else:
-            if _tmp.startswith(config.project_path):
-                _Ret.append(folderobj(_sub, _tmp[len(config.project_path):]))
-            else:
-                _Ret.append(folderobj(_sub, _tmp))
-    return _Ret
+            _Ret_floder.append(folderobj(_sub, _filepath))
+    return _Ret_floder + _Ret_file
 
 
 def delete_folder(dirpath):
