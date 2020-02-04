@@ -142,13 +142,13 @@ def file_size(filepath):
         return str(round(size / TB, 2)) + "TB"
 
 
-def scan_folder_first(floder):
+def scan_folder_first(folder):
     '''遍历一个文件夹下第一层目录的子文件和子目录'''
 
     _Ret_file = []
     _Ret_folder = []
-    for _sub in sorted(os.listdir(floder)):
-        _tmp = floder + _sub
+    for _sub in sorted(os.listdir(folder)):
+        _tmp = folder + _sub
         if _tmp.startswith(config.project_path):
             _filepath = _tmp[len(config.project_path):]
         else:

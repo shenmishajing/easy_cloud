@@ -94,7 +94,7 @@ def downloadex(path_name):
 @app.route('/upload/<path:path_name>', methods = ['POST'])
 @verify_wrapper
 def upload_file(path_name):
-    '''upload a new file in current floder'''
+    '''upload a new file in current folder'''
     if request.method == 'POST':
         file = request.files['file']
         if file:
@@ -109,7 +109,7 @@ def upload_file(path_name):
 @app.route('/remove', methods = ['POST'])
 @verify_wrapper
 def remove_files():
-    '''remove target file in current floder'''
+    '''remove target file in current folder'''
     if request.method == 'POST':
         files = eval(request.form.get('files_json_value'))
         try:
