@@ -26,13 +26,12 @@ def login(response, user):
 
 
 def verify_login_str(cookies, user):
-    flag = False
     for i in range(len(login_user[user]) - 1, -1, -1):
         if (datetime.now() - login_user[user][i]['login_date']).days > 7:
             del login_user[user][i]
         elif cookies.get('login_str', None) == login_user[user][i]['login_str']:
-            flag = True
-    return flag
+            return True
+    return False
 
 
 def verify_already_login(cookies):
