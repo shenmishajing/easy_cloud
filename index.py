@@ -64,7 +64,7 @@ def HTML_hello():
 @verify_wrapper
 def HTML_files(pathname):
     _pathname = config.project_path + pathname + '/'
-    files = scan_floder_first(_pathname)
+    files = scan_folder_first(_pathname)
     return render_template('filelist.html', config = cfg, files = files, current_path = pathname)
 
 

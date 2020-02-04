@@ -142,12 +142,11 @@ def file_size(filepath):
         return str(round(size / TB, 2)) + "TB"
 
 
-def scan_floder_first(floder):
+def scan_folder_first(floder):
     '''遍历一个文件夹下第一层目录的子文件和子目录'''
 
-    _Ret = []
     _Ret_file = []
-    _Ret_floder = []
+    _Ret_folder = []
     for _sub in sorted(os.listdir(floder)):
         _tmp = floder + _sub
         if _tmp.startswith(config.project_path):
@@ -161,8 +160,8 @@ def scan_floder_first(floder):
             _filelink = _filepath
             _Ret_file.append(fileobj(_filename, _filetype, _filesize, _filepath, _filelink))
         else:
-            _Ret_floder.append(folderobj(_sub, _filepath))
-    return _Ret_floder + _Ret_file
+            _Ret_folder.append(folderobj(_sub, _filepath))
+    return _Ret_folder + _Ret_file
 
 
 def delete_folder(dirpath):
@@ -193,5 +192,5 @@ class Timer:
 
 if __name__ == '__main__':
 
-    for file in scan_floder_first("./Files/"):
+    for file in scan_folder_first("./Files/"):
         print(file)
